@@ -8,10 +8,6 @@ export default function Categories() {
   const [description, setDescription] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
   async function loadCategories() {
     try {
       const data = await api.getCategories();
@@ -20,6 +16,10 @@ export default function Categories() {
       console.error(err);
     }
   }
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

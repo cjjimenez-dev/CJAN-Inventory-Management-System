@@ -26,10 +26,6 @@ export default function Inventory() {
   const [sellData, setSellData] = useState({ product_id: '', quantity_sold: 1 });
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   async function loadData() {
     try {
       const [pData, cData] = await Promise.all([
@@ -42,6 +38,10 @@ export default function Inventory() {
       console.error(err);
     }
   }
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const openAddModal = () => {
     setIsEditing(false);

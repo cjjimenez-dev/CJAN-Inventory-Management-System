@@ -17,11 +17,6 @@ export default function Dashboard() {
   });
   const [recentProducts, setRecentProducts] = useState([]);
 
-  useEffect(() => {
-    loadStats();
-    loadRecentProducts();
-  }, []);
-
   async function loadStats() {
     try {
       const data = await api.getDashboard();
@@ -39,6 +34,11 @@ export default function Dashboard() {
       console.error(err);
     }
   }
+
+  useEffect(() => {
+    loadStats();
+    loadRecentProducts();
+  }, []);
 
   const formatCurrency = (val) =>
     new Intl.NumberFormat('en-PH', {

@@ -8,13 +8,56 @@ import {
   QuestionMarkCircleIcon,
   Cog6ToothIcon,
   ArrowLeftStartOnRectangleIcon,
+  CalculatorIcon,
 } from '@heroicons/react/24/outline';
 import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Categories from './components/Categories';
+import POS from './components/POS';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (passwordInput === 'admin123') {
+      setIsAuthenticated(true);
+      setLoginError('');
+    } else {
+      setLoginError('Incorrect password');
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#f3f4f6' }}>
+        <div style={{ backgroundColor: '#fff', padding: '2.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', width: '100%', maxWidth: '400px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ width: '48px', height: '48px', backgroundColor: 'var(--accent-primary)', color: '#fff', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', margin: '0 auto 1rem' }}>C</div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>CJAN Inventory</h1>
+            <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0' }}>Please log in to continue</p>
+          </div>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {loginError && <div style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', textAlign: 'center' }}>{loginError}</div>}
+            <input
+              type="password"
+              placeholder="Enter password"
+              className="form-input"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              autoFocus
+            />
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}>
+              Sign In
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-layout">
@@ -44,6 +87,13 @@ function App() {
             Inventory
           </button>
           <button
+            className={`nav-btn ${activeTab === 'pos' ? 'active' : ''}`}
+            onClick={() => setActiveTab('pos')}
+          >
+            <CalculatorIcon style={{ width: '1.125rem', height: '1.125rem' }} />
+            Point of Sale
+          </button>
+          <button
             className={`nav-btn ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
           >
@@ -61,7 +111,7 @@ function App() {
             />
             Settings
           </button>
-          <button className="nav-btn">
+          <button className="nav-btn" onClick={() => setIsAuthenticated(false)}>
             <ArrowLeftStartOnRectangleIcon
               style={{ width: '1.125rem', height: '1.125rem' }}
             />
@@ -114,6 +164,7 @@ function App() {
           {activeTab === 'dashboard' && <Dashboard />}
           {activeTab === 'inventory' && <Inventory />}
           {activeTab === 'categories' && <Categories />}
+          {activeTab === 'pos' && <POS />}
         </div>
       </div>
     </div>

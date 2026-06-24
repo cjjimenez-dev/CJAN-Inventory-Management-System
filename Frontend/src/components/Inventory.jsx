@@ -164,6 +164,39 @@ export default function Inventory() {
     return { cls: 'normal', dotCls: '', suffix: 'Units' };
   };
 
+  const handleExportCSV = () => {
+    if (products.length === 0) return;
+    
+    // Create CSV headers
+    const headers = ['SKU ID', 'Product Name', 'Category', 'Base Price', 'Profit', 'Selling Price', 'Stock Level'];
+    
+    // Create CSV rows
+    const rows = products.map(p => {
+      const sellingPrice = parseFloat(p.base_price) + parseFloat(p.profit);
+      return [
+        `SKU-${String(p.id).padStart(5, '0')}`,
+        `"${p.name.replace(/"/g, '""')}"`, // Escape quotes
+        `"${(p.category_name || 'Uncategorized').replace(/"/g, '""')}"`,
+        p.base_price,
+        p.profit,
+        sellingPrice,
+        p.quantity_in_stock
+      ].join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `inventory_backup_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const lowStockCount = products.filter((p) => p.quantity_in_stock < 10).length;
   const totalValuation = products.reduce(
     (sum, p) =>
@@ -184,13 +217,21 @@ export default function Inventory() {
           <h2>Inventory Overview</h2>
           <p>Manage and track your warehouse stock levels in real-time.</p>
         </div>
-        <button
-          className="btn btn-primary"
-          onClick={openAddModal}
-        >
-          <PlusIcon style={{ width: '1rem', height: '1rem' }} />
-          ADD PRODUCT
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            className="btn btn-outline"
+            onClick={handleExportCSV}
+          >
+            EXPORT CSV
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={openAddModal}
+          >
+            <PlusIcon style={{ width: '1rem', height: '1rem' }} />
+            ADD PRODUCT
+          </button>
+        </div>
       </div>
 
       {/* Metrics */}

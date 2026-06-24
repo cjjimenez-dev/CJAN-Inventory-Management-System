@@ -1,0 +1,16 @@
+{
+  "name": "inventory-system",
+  "version": "0.0.0",
+  "description": "Full-stack inventory management system",
+  "private": true,
+  "workspaces": [
+    "Frontend",
+    "Backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=Frontend & npm run dev --workspace=Backend",
+    "build": "npm run build --workspace=Frontend",
+    "lint": "npm run lint --workspace=Frontend && npm run lint --workspace=Backend",
+    "start:backend": "npm start --workspace=Backend"
+  }
+}

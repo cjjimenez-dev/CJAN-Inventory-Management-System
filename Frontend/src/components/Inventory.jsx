@@ -14,6 +14,7 @@ export default function Inventory() {
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubProduct, setIsSubProduct] = useState(false);
   const [formData, setFormData] = useState({
     id: '',
     name: '',
@@ -21,6 +22,8 @@ export default function Inventory() {
     base_price: 0,
     selling_price: 0,
     quantity_in_stock: 0,
+    parent_id: '',
+    pieces_per_parent: 0,
   });
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellData, setSellData] = useState({ product_id: '', quantity_sold: 1 });
@@ -46,6 +49,7 @@ export default function Inventory() {
 
   const openAddModal = () => {
     setIsEditing(false);
+    setIsSubProduct(false);
     setFormData({
       id: '',
       name: '',
@@ -53,6 +57,8 @@ export default function Inventory() {
       base_price: 0,
       selling_price: 0,
       quantity_in_stock: 0,
+      parent_id: '',
+      pieces_per_parent: 0,
     });
     setErrorMsg('');
     setShowModal(true);
@@ -60,9 +66,12 @@ export default function Inventory() {
 
   const openEditModal = (p) => {
     setIsEditing(true);
+    setIsSubProduct(!!p.parent_id);
     setFormData({
       ...p,
-      selling_price: parseFloat(p.base_price) + parseFloat(p.profit)
+      selling_price: parseFloat(p.base_price) + parseFloat(p.profit),
+      parent_id: p.parent_id || '',
+      pieces_per_parent: p.pieces_per_parent || 0,
     });
     setErrorMsg('');
     setShowModal(true);
@@ -87,6 +96,12 @@ export default function Inventory() {
       if (!payload.category_id || payload.category_id === '') {
         payload.category_id = null; // Fix integer parsing error for empty strings
       }
+      
+      if (!isSubProduct) {
+        payload.parent_id = null;
+        payload.pieces_per_parent = null;
+      }
+
       if (isEditing) {
         await api.updateProduct(payload);
       } else {
@@ -256,7 +271,14 @@ export default function Inventory() {
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', fontFamily: 'var(--font-label)' }}>
                       SKU-{String(p.id).padStart(5, '0')}
                     </td>
-                    <td className="product-name">{p.name}</td>
+                    <td className="product-name">
+                      {p.name}
+                      {p.parent_id && (
+                         <span style={{ fontSize: '0.7rem', backgroundColor: '#e0e7ff', color: '#4f46e5', padding: '0.1rem 0.4rem', borderRadius: '1rem', marginLeft: '0.5rem', whiteSpace: 'nowrap' }}>
+                           Sub-item
+                         </span>
+                      )}
+                    </td>
                     <td>
                       <span
                         className={`category-badge ${getCategoryClass(p.category_name)}`}
@@ -430,11 +452,63 @@ export default function Inventory() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        quantity_in_stock: parseInt(e.target.value, 10),
+                        quantity_in_stock: parseInt(e.target.value, 10) || 0,
                       })
                     }
                   />
                 </div>
+                
+                <div className="form-group mt-6 mb-0" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    id="isSubProduct"
+                    checked={isSubProduct}
+                    onChange={(e) => setIsSubProduct(e.target.checked)}
+                    style={{ width: '1rem', height: '1rem', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="isSubProduct" className="form-label" style={{ marginBottom: 0, cursor: 'pointer' }}>
+                    This item is sold by pieces (linked to a pack)
+                  </label>
+                </div>
+
+                {isSubProduct && (
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="form-group mb-0">
+                      <label className="form-label">Parent Product (Pack)</label>
+                      <select
+                        className="form-select"
+                        required={isSubProduct}
+                        value={formData.parent_id}
+                        onChange={(e) => setFormData({ ...formData, parent_id: e.target.value })}
+                      >
+                        <option value="">Select Parent</option>
+                        {products
+                          .filter(p => p.id !== formData.id)
+                          .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group mb-0">
+                      <label className="form-label">Pieces per Pack</label>
+                      <input
+                        type="number"
+                        min="1"
+                        required={isSubProduct}
+                        className="form-input"
+                        value={formData.pieces_per_parent || ''}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pieces_per_parent: parseInt(e.target.value, 10) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button

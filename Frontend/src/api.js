@@ -69,9 +69,9 @@ export const api = {
     const { id, category_name, categories, ...newProduct } = product;
     
     // Ensure category_id is either a valid number or null
-    if (!newProduct.category_id) {
-        newProduct.category_id = null;
-    }
+    if (!newProduct.category_id) newProduct.category_id = null;
+    if (!newProduct.parent_id) newProduct.parent_id = null;
+    if (!newProduct.pieces_per_parent) newProduct.pieces_per_parent = null;
 
     const { data, error } = await supabase.from('products').insert([newProduct]).select();
     if (error) throw error;
@@ -83,9 +83,9 @@ export const api = {
     const { id, category_name, categories, ...updateData } = product;
     
     // Ensure category_id is either a valid number or null
-    if (!updateData.category_id) {
-        updateData.category_id = null;
-    }
+    if (!updateData.category_id) updateData.category_id = null;
+    if (!updateData.parent_id) updateData.parent_id = null;
+    if (!updateData.pieces_per_parent) updateData.pieces_per_parent = null;
 
     const { data, error } = await supabase.from('products').update(updateData).eq('id', id).select();
     if (error) throw error;
@@ -108,10 +108,33 @@ export const api = {
   },
   recordSale: async (product_id, quantity_sold) => {
     // 1. Get product price and stock
-    const { data: product, error: prodErr } = await supabase.from('products').select('base_price, profit, quantity_in_stock').eq('id', product_id).single();
+    const { data: product, error: prodErr } = await supabase.from('products').select('base_price, profit, quantity_in_stock, parent_id, pieces_per_parent').eq('id', product_id).single();
     if (prodErr) throw prodErr;
     
-    if (product.quantity_in_stock < quantity_sold) {
+    let current_stock = product.quantity_in_stock;
+
+    // Auto-unpacking logic
+    if (current_stock < quantity_sold && product.parent_id && product.pieces_per_parent) {
+      const shortage = quantity_sold - current_stock;
+      const packsNeeded = Math.ceil(shortage / product.pieces_per_parent);
+
+      // Fetch parent product
+      const { data: parentProduct, error: parentErr } = await supabase.from('products').select('quantity_in_stock').eq('id', product.parent_id).single();
+      if (parentErr) throw parentErr;
+
+      if (parentProduct.quantity_in_stock < packsNeeded) {
+        throw new Error(`Not enough parent packs to open! You need ${packsNeeded} packs, but only have ${parentProduct.quantity_in_stock} in stock.`);
+      }
+
+      // Deduct from parent
+      const { error: parentUpdateErr } = await supabase.from('products').update({
+        quantity_in_stock: parentProduct.quantity_in_stock - packsNeeded
+      }).eq('id', product.parent_id);
+      if (parentUpdateErr) throw parentUpdateErr;
+
+      // Add unpacked pieces to current stock count
+      current_stock += (packsNeeded * product.pieces_per_parent);
+    } else if (current_stock < quantity_sold) {
       throw new Error('Not enough stock available.');
     }
 
@@ -128,7 +151,7 @@ export const api = {
 
     // 3. Update stock
     const { error: updateErr } = await supabase.from('products').update({
-      quantity_in_stock: product.quantity_in_stock - quantity_sold
+      quantity_in_stock: current_stock - quantity_sold
     }).eq('id', product_id);
     
     if (updateErr) throw updateErr;

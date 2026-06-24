@@ -14,24 +14,39 @@ import Dashboard from './components/Dashboard';
 import Inventory from './components/Inventory';
 import Categories from './components/Categories';
 import POS from './components/POS';
+import Settings from './components/Settings';
+import { api } from './api';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (passwordInput === 'admin123') {
-      setIsAuthenticated(true);
-      setLoginError('');
-    } else {
-      setLoginError('Incorrect password');
+    setLoginError('');
+    setIsLoggingIn(true);
+    
+    try {
+      const user = await api.authenticate(usernameInput, passwordInput);
+      setCurrentUser(user);
+    } catch (err) {
+      setLoginError(err.message || 'Incorrect username or password');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  if (!isAuthenticated) {
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setUsernameInput('');
+    setPasswordInput('');
+  };
+
+  if (!currentUser) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#f3f4f6' }}>
         <div style={{ backgroundColor: '#fff', padding: '2.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', width: '100%', maxWidth: '400px' }}>
@@ -43,15 +58,22 @@ function App() {
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {loginError && <div style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.875rem', textAlign: 'center' }}>{loginError}</div>}
             <input
+              type="text"
+              placeholder="Username"
+              className="form-input"
+              value={usernameInput}
+              onChange={(e) => setUsernameInput(e.target.value)}
+              autoFocus
+            />
+            <input
               type="password"
-              placeholder="Enter password"
+              placeholder="Password"
               className="form-input"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
-              autoFocus
             />
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}>
-              Sign In
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }} disabled={isLoggingIn}>
+              {isLoggingIn ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
         </div>
@@ -105,17 +127,22 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <button className="nav-btn">
-            <Cog6ToothIcon
-              style={{ width: '1.125rem', height: '1.125rem' }}
-            />
-            Settings
-          </button>
-          <button className="nav-btn" onClick={() => setIsAuthenticated(false)}>
+          {currentUser?.role === 'admin' && (
+            <button
+              className={`nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              <Cog6ToothIcon
+                style={{ width: '1.125rem', height: '1.125rem' }}
+              />
+              Settings
+            </button>
+          )}
+          <button className="nav-btn" onClick={handleLogout}>
             <ArrowLeftStartOnRectangleIcon
               style={{ width: '1.125rem', height: '1.125rem' }}
             />
-            Logout
+            Logout ({currentUser?.username})
           </button>
         </div>
       </aside>
@@ -165,6 +192,7 @@ function App() {
           {activeTab === 'inventory' && <Inventory />}
           {activeTab === 'categories' && <Categories />}
           {activeTab === 'pos' && <POS />}
+          {activeTab === 'settings' && <Settings currentUser={currentUser} />}
         </div>
       </div>
     </div>

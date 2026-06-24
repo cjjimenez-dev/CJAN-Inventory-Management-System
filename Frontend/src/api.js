@@ -157,5 +157,40 @@ export const api = {
     if (updateErr) throw updateErr;
 
     return { success: true };
+  },
+
+  // Users & Authentication
+  authenticate: async (username, password) => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username)
+      .eq('password', password)
+      .single();
+    
+    if (error) {
+      throw new Error('Invalid username or password');
+    }
+    return data;
+  },
+  getUsers: async () => {
+    const { data, error } = await supabase.from('users').select('*').order('id', { ascending: true });
+    if (error) throw error;
+    return data;
+  },
+  createUser: async ({ username, password, role }) => {
+    const { data, error } = await supabase.from('users').insert([{ username, password, role }]).select();
+    if (error) throw error;
+    return data[0];
+  },
+  updateUser: async (id, { username, password, role }) => {
+    const { data, error } = await supabase.from('users').update({ username, password, role }).eq('id', id).select();
+    if (error) throw error;
+    return data[0];
+  },
+  deleteUser: async (id) => {
+    const { error } = await supabase.from('users').delete().eq('id', id);
+    if (error) throw error;
+    return true;
   }
 };

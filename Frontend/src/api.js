@@ -64,7 +64,16 @@ export const api = {
     }));
   },
   createProduct: async (product) => {
-    const { data, error } = await supabase.from('products').insert([product]).select();
+    // Remove relational data and empty id to prevent integer parsing errors
+    // eslint-disable-next-line no-unused-vars
+    const { id, category_name, categories, ...newProduct } = product;
+    
+    // Ensure category_id is either a valid number or null
+    if (!newProduct.category_id) {
+        newProduct.category_id = null;
+    }
+
+    const { data, error } = await supabase.from('products').insert([newProduct]).select();
     if (error) throw error;
     return data[0];
   },

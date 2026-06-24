@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   PlusIcon,
   FunnelIcon,
@@ -30,7 +30,7 @@ export default function Inventory() {
     loadData();
   }, []);
 
-  const loadData = async () => {
+  async function loadData() {
     try {
       const [pData, cData] = await Promise.all([
         api.getProducts(),
@@ -41,7 +41,7 @@ export default function Inventory() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
   const openAddModal = () => {
     setIsEditing(false);

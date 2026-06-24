@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { TrashIcon, TagIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react';
+import { TrashIcon, TagIcon } from '@heroicons/react/24/outline';
 import { api } from '../api';
 
 export default function Categories() {
@@ -12,14 +12,14 @@ export default function Categories() {
     loadCategories();
   }, []);
 
-  const loadCategories = async () => {
+  async function loadCategories() {
     try {
       const data = await api.getCategories();
       setCategories(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

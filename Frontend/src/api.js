@@ -70,6 +70,7 @@ export const api = {
   },
   updateProduct: async (product) => {
     // Remove relational data before updating
+    // eslint-disable-next-line no-unused-vars
     const { id, category_name, categories, ...updateData } = product;
     
     // Ensure category_id is either a valid number or null

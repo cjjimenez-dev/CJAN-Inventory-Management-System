@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ChartBarIcon,
-  CurrencyDollarIcon,
   CubeIcon,
   ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
@@ -23,23 +22,23 @@ export default function Dashboard() {
     loadRecentProducts();
   }, []);
 
-  const loadStats = async () => {
+  async function loadStats() {
     try {
       const data = await api.getDashboard();
       setStats(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const loadRecentProducts = async () => {
+  async function loadRecentProducts() {
     try {
       const data = await api.getProducts();
       setRecentProducts(data.slice(0, 5));
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
   const formatCurrency = (val) =>
     new Intl.NumberFormat('en-PH', {

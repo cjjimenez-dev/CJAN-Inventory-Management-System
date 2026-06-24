@@ -19,7 +19,7 @@ export default function Inventory() {
     name: '',
     category_id: '',
     base_price: 0,
-    profit: 0,
+    selling_price: 0,
     quantity_in_stock: 0,
   });
   const [showSellModal, setShowSellModal] = useState(false);
@@ -51,7 +51,7 @@ export default function Inventory() {
       name: '',
       category_id: categories.length > 0 ? categories[0].id : '',
       base_price: 0,
-      profit: 0,
+      selling_price: 0,
       quantity_in_stock: 0,
     });
     setErrorMsg('');
@@ -60,7 +60,10 @@ export default function Inventory() {
 
   const openEditModal = (p) => {
     setIsEditing(true);
-    setFormData(p);
+    setFormData({
+      ...p,
+      selling_price: parseFloat(p.base_price) + parseFloat(p.profit)
+    });
     setErrorMsg('');
     setShowModal(true);
   };
@@ -76,6 +79,11 @@ export default function Inventory() {
     setErrorMsg('');
     try {
       const payload = { ...formData };
+      
+      // Calculate profit from selling price
+      payload.profit = parseFloat(payload.selling_price) - parseFloat(payload.base_price);
+      delete payload.selling_price;
+
       if (!payload.category_id || payload.category_id === '') {
         payload.category_id = null; // Fix integer parsing error for empty strings
       }
@@ -396,17 +404,17 @@ export default function Inventory() {
                     />
                   </div>
                   <div className="form-group mb-0">
-                    <label className="form-label">Profit (₱)</label>
+                    <label className="form-label">Selling Price (₱)</label>
                     <input
                       type="number"
                       step="0.01"
                       required
                       className="form-input"
-                      value={formData.profit}
+                      value={formData.selling_price}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          profit: parseFloat(e.target.value),
+                          selling_price: parseFloat(e.target.value),
                         })
                       }
                     />

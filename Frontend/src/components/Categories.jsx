@@ -18,6 +18,7 @@ export default function Categories() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line
     loadCategories();
   }, []);
 

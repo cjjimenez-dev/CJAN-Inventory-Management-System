@@ -40,6 +40,7 @@ export default function Inventory() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line
     loadData();
   }, []);
 

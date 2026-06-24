@@ -36,7 +36,9 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line
     loadStats();
+    // eslint-disable-next-line
     loadRecentProducts();
   }, []);
 

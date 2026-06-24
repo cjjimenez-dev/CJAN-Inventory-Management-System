@@ -6,6 +6,7 @@ export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     loadCategories();
@@ -22,13 +23,14 @@ export default function Categories() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
     try {
       await api.createCategory({ name, description });
       setName('');
       setDescription('');
       loadCategories();
     } catch (err) {
-      alert('Error: ' + err.message);
+      setErrorMsg('Error: ' + err.message);
     }
   };
 
@@ -76,6 +78,11 @@ export default function Categories() {
               <h3>Create Category</h3>
             </div>
             <div className="card-body">
+              {errorMsg && (
+                <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #f87171' }}>
+                  {errorMsg}
+                </div>
+              )}
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label className="form-label">Category Name</label>

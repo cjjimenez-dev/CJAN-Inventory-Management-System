@@ -24,6 +24,7 @@ export default function Inventory() {
   });
   const [showSellModal, setShowSellModal] = useState(false);
   const [sellData, setSellData] = useState({ product_id: '', quantity_sold: 1 });
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     loadData();
@@ -52,37 +53,45 @@ export default function Inventory() {
       profit: 0,
       quantity_in_stock: 0,
     });
+    setErrorMsg('');
     setShowModal(true);
   };
 
   const openEditModal = (p) => {
     setIsEditing(true);
     setFormData(p);
+    setErrorMsg('');
     setShowModal(true);
   };
 
   const openSellModal = (p) => {
     setSellData({ product_id: p.id, quantity_sold: 1 });
+    setErrorMsg('');
     setShowSellModal(true);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
     try {
+      const payload = { ...formData };
+      if (!payload.category_id || payload.category_id === '') {
+        payload.category_id = null; // Fix integer parsing error for empty strings
+      }
       if (isEditing) {
-        await api.updateProduct(formData);
+        await api.updateProduct(payload);
       } else {
-        await api.createProduct(formData);
+        await api.createProduct(payload);
       }
       setShowModal(false);
       loadData();
     } catch (err) {
-      alert('Error: ' + err.message);
+      setErrorMsg('Error: ' + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to remove this product?')) return;
+    if (!window.confirm('Are you sure you want to remove this product?')) return;
     try {
       await api.deleteProduct(id);
       loadData();
@@ -93,12 +102,13 @@ export default function Inventory() {
 
   const handleSell = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
     try {
       await api.recordSale(sellData.product_id, sellData.quantity_sold);
       setShowSellModal(false);
       loadData();
     } catch (err) {
-      alert('Error: ' + err.message);
+      setErrorMsg('Error: ' + err.message);
     }
   };
 
@@ -333,6 +343,11 @@ export default function Inventory() {
             </div>
             <form onSubmit={handleSave}>
               <div className="modal-body">
+                {errorMsg && (
+                  <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #f87171' }}>
+                    {errorMsg}
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Name</label>
                   <input
@@ -438,6 +453,11 @@ export default function Inventory() {
             </div>
             <form onSubmit={handleSell}>
               <div className="modal-body">
+                {errorMsg && (
+                  <div style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '0.375rem', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid #f87171' }}>
+                    {errorMsg}
+                  </div>
+                )}
                 <div className="form-group mb-0">
                   <label className="form-label">Quantity Sold</label>
                   <input
